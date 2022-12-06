@@ -14,6 +14,13 @@ nlu:
     - I want to check the status of my order
     - actually can I check the status of my order
     - order status for example@rasa.com
+- intent: start_register
+  examples: |
+    - register
+    - registration
+    - log in
+    - sign up
+    - sign in
 - intent: order_cancel
   examples: |
     - i'd like to cancel my order
@@ -219,3 +226,15 @@ nlu:
   examples: |
     - can you tell me your name?
     - what's your name?
+- intent: register_fill_name
+  examples: |
+    - name
+- intent: check_sizes
+  examples: |
+    - check sizes
+    - size table
+    - show size table
+    - table size
+    - size converter
+    - convert sizes    
+

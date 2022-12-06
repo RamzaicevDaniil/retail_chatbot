@@ -188,3 +188,40 @@ rules:
   - action: survey_form
   - active_loop: null
   - action: action_survey_submit
+
+
+- rule: Start register
+  steps:
+  - intent: start_register
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: register_form
+  - active_loop: register_form
+
+
+- rule: Submit registration
+  condition:
+  - active_loop: register_form
+  steps:
+  - action: register_form
+  - active_loop: null
+  - action: action_register
+
+- rule: Fill name
+  steps:
+  - intent: register_fill_name
+  - action: action_fill_name
+
+# - rule: user asks for size converter
+#   steps:
+#   - intent: check_sizes
+#   - action: action_size
+
+- rule: user asks for size converter
+  steps:
+  - intent: check_sizes
+  - action: size_form
+  - active_loop: null
+  - action: action_convert_size
+
+

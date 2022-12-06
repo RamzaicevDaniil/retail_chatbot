@@ -1,13 +1,130 @@
 from typing import Any, Text, Dict, List
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
-from rasa_sdk.events import SlotSet
+from rasa_sdk.events import SlotSet, UserUttered
 from rasa_sdk.events import FollowupAction
 from rasa_sdk.events import BotUttered
 import sqlite3
-
+import phonenumbers
+from phonenumbers import carrier
+from phonenumbers.phonenumberutil import number_type
+import sizes
 # change this to the location of your SQLite file
 path_to_db = "actions/example.db"
+
+
+def validate(user_email, user_first_name, user_second_name, user_phone_number):
+    flag = 1
+    if not re.match("[^@]+@[^@]+\.[^@]+", user_email):
+        flag = 0
+        print('Please enter the correct email')
+    if user_first_name[0] != user_first_name[0].upper():
+        flag = 0
+        print('Please enter your name starting with a capital letter')
+    if user_second_name[0] != user_second_name[0].upper():
+        flag = 0
+        print('Please enter your lastname starting with a capital letter')
+    if carrier._is_mobile(number_type(phonenumbers.parse(number))) == False:
+        flag = 0
+        print('Plese enter the correct phone number')
+    return flag
+# action_convert_size
+
+class ConvertSize(Action):
+    def name(self) -> Text:
+        return "action_convert_size"
+
+    def run(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+
+        size_text = tracker.get_slot("size_text")
+
+        dispatcher.utter_message(text=size_text)
+        
+        info = size_text.split()
+        size_from = info[0]
+        size_to = info[1]
+        size = float(info[2])
+        size_to_val = sizes.convert(size_from, size_to, size)
+
+        dispatcher.utter_message(text=str(size_to_val))
+        return []
+
+class RegistrationName(Action):
+    def name(self) -> Text:
+        return "action_fill_name"
+
+    def run(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+
+        dispatcher.utter_message(text="what is your name")
+
+        message = tracker.latest_message['text']
+
+        if message[0] != message[0].upper():
+            dispatcher.utter_message(text='Please enter your name starting with a capital letter')
+        
+        return[]
+
+class Registration(Action):
+    def name(self) -> Text:
+        return "action_register"
+
+    def run(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+
+        # connect to DB
+        connection = sqlite3.connect(path_to_db)
+        cursor = connection.cursor()
+
+        #add email and passord
+        user_email = tracker.get_slot("email")
+        # user_password = tracker.get_slot("password")
+        # user_first_name = tracker.get_slot("first_name")
+        # user_second_name = tracker.get_slot("second_name")
+        # user_country = tracker.get_slot("country")
+        user_phone_number = tracker.get_slot("phone_number")
+        # user_info = (user_email, user_password, user_first_name, user_second_name, user_country, user_phone_number)
+
+        # its_OK = validate(user_email)
+        # if its_OK:
+        #     cursor.execute("INSERT INTO user VALUES (?, ?, ?, ?, ?, ?)", user_info)    
+        # else:
+        #     pass
+        #     # need to restart action
+        
+        user_info = (user_email, user_phone_number)
+        cursor.execute("INSERT INTO user VALUES (?, ?)", user_info)
+        
+        connection.commit()
+        connection.close()
+
+        message = tracker.latest_message['text']
+        if True: #correct(message):
+            dispatcher.utter_message(template="utter_register_successful")
+            return [
+                UserUttered("name", parse_data={'intent':{'name': 'register_fill_name', 'confidence': 1.0}}),
+                SlotSet("requested_slot", "name")]
+        else:
+            # slot intent register
+
+            return []
+        # dispatcher.utter_message(text=message)
+
+        return []
+
 
 class ActionProductSearch(Action):
     def name(self) -> Text:
@@ -78,7 +195,7 @@ class OrderStatus(Action):
         cursor = connection.cursor()
 
         # get email slot
-        order_email = (tracker.get_slot("email"),)
+        order_email = (tracker.get_slot("email"))
 
         # retrieve row based on email
         cursor.execute("SELECT * FROM orders WHERE order_email=?", order_email)
