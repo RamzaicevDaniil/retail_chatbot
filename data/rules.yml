@@ -193,35 +193,78 @@ rules:
 - rule: Start register
   steps:
   - intent: start_register
+
   - action: action_deactivate_loop
   - active_loop: null
+  - action: first_name_form
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: action_validate_first_name
+  - action: first_name_form
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: action_validate_first_name
+  - action: first_name_form
+  - action: action_deactivate_loop
+  - active_loop: null
+
+  - action: last_name_form
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: action_validate_last_name
+  - action: last_name_form
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: action_validate_last_name
+  - action: last_name_form
+  - action: action_deactivate_loop
+  - active_loop: null
+
+  - action: birth_date_form
+  - action: action_validate_birth_date
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: birth_date_form
+  - action: action_validate_birth_date
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: birth_date_form
+  - action: action_validate_birth_date
+  - action: action_deactivate_loop
+  - active_loop: null
+
   - action: register_form
   - active_loop: register_form
-
-
-- rule: Submit registration
-  condition:
-  - active_loop: register_form
-  steps:
-  - action: register_form
+  - active_loop: null
+  - action: password_form
+  - action: action_deactivate_loop
   - active_loop: null
   - action: action_register
+  - action: action_deactivate_loop
+  - active_loop: null
+  - action: action_restart
 
-- rule: Fill name
-  steps:
-  - intent: register_fill_name
-  - action: action_fill_name
-
-# - rule: user asks for size converter
+# - rule: Submit registration
+#   condition:
+#   - active_loop: register_form
 #   steps:
-#   - intent: check_sizes
-#   - action: action_size
+#   - action: register_form
+#   - active_loop: null
+#   - action: action_register
+
+# - rule: Fill name
+#   steps:
+#   - intent: register_fill_name
+#   - action: action_fill_name
 
 - rule: user asks for size converter
   steps:
   - intent: check_sizes
-  - action: size_form
+  - action: action_deactivate_loop
   - active_loop: null
+  - action: size_form
   - action: action_convert_size
+  - action: action_deactivate_loop
+  - active_loop: null
 
 

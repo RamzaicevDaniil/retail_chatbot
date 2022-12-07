@@ -76,7 +76,14 @@ slots:
       conditions:
       - active_loop: register_form
         requested_slot: phone_number
-
+  password:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: password_form
+        requested_slot: password
   size:
     type: text
     influence_conversation: false
@@ -126,11 +133,34 @@ slots:
     influence_conversation: true
     mappings:
     - type: custom
-  name:
+
+  first_name:
     type: text
     influence_conversation: false
     mappings:
     - type: from_text
+      conditions:
+      - active_loop: first_name_form
+        requested_slot: first_name
+
+  last_name:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: last_name_form
+        requested_slot: last_name
+
+  birth_date:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: birth_date_form
+        requested_slot: birth_date
+    
 
 responses:
   utter_greet:
@@ -148,6 +178,16 @@ responses:
     - payload: Check sizes
       title: Check sizes
     text: Hi there! I'm a demo bot from Rasa to help you with ordering shoes. How can I help you?
+  utter_ask_birth_date:
+  - text: "Please, enter your birth date in format YYYY-MM-DD"
+  utter_ask_first_name:
+  - text: "whats your first name?"
+  utter_ask_password:
+  - text: "whats your password?"
+  utter_ask_last_name:
+  - text: "whats your last name?"
+  utter_ask_size_text:
+  - text: "Which size to convert?"
   utter_ask_email:
   - text: "Whats your email?"
   utter_ask_phone_number:
@@ -249,7 +289,9 @@ actions:
 - action_return
 - action_give_name
 - action_register
-- action_fill_name
+- action_validate_first_name
+- action_validate_last_name
+- action_validate_birth_date
 - action_convert_size
 forms:
   register_form:
@@ -257,6 +299,7 @@ forms:
     required_slots:
     - email
     - phone_number
+    
   order_status_form:
     ignored_intents: []
     required_slots:
@@ -288,3 +331,23 @@ forms:
     ignored_intents: []
     required_slots:
     - size_text
+
+  password_form:
+    ignored_intents: []
+    required_slots:
+    - password
+
+  first_name_form:
+    ignored_intents: []
+    required_slots:
+    - first_name
+
+  last_name_form:
+    ignored_intents: []
+    required_slots:
+    - last_name
+
+  birth_date_form:
+    ignored_intents: []
+    required_slots:
+    - birth_date

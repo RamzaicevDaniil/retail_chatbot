@@ -9,26 +9,12 @@ import phonenumbers
 from phonenumbers import carrier
 from phonenumbers.phonenumberutil import number_type
 import sizes
+from datetime import datetime
+import time
+from dateutil.parser import parse
 # change this to the location of your SQLite file
 path_to_db = "actions/example.db"
 
-
-def validate(user_email, user_first_name, user_second_name, user_phone_number):
-    flag = 1
-    if not re.match("[^@]+@[^@]+\.[^@]+", user_email):
-        flag = 0
-        print('Please enter the correct email')
-    if user_first_name[0] != user_first_name[0].upper():
-        flag = 0
-        print('Please enter your name starting with a capital letter')
-    if user_second_name[0] != user_second_name[0].upper():
-        flag = 0
-        print('Please enter your lastname starting with a capital letter')
-    if carrier._is_mobile(number_type(phonenumbers.parse(number))) == False:
-        flag = 0
-        print('Plese enter the correct phone number')
-    return flag
-# action_convert_size
 
 class ConvertSize(Action):
     def name(self) -> Text:
@@ -52,11 +38,11 @@ class ConvertSize(Action):
         size_to_val = sizes.convert(size_from, size_to, size)
 
         dispatcher.utter_message(text=str(size_to_val))
-        return []
+        return [SlotSet("size_text", None)]
 
-class RegistrationName(Action):
+class ValidateFirstName(Action):
     def name(self) -> Text:
-        return "action_fill_name"
+        return "action_validate_first_name"
 
     def run(
         self,
@@ -65,13 +51,66 @@ class RegistrationName(Action):
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
 
-        dispatcher.utter_message(text="what is your name")
 
         message = tracker.latest_message['text']
 
         if message[0] != message[0].upper():
-            dispatcher.utter_message(text='Please enter your name starting with a capital letter')
-        
+            dispatcher.utter_message(text='Please enter your first name starting with a capital letter')
+            return [SlotSet("first_name", None)]
+        letters = "abcdefghijklmnopqrstuvwxyz"
+        upper_letters = letters.upper()
+        for m in message:
+            if not ((m in letters) or (m in upper_letters)):
+                dispatcher.utter_message(text='Use only letters for your first name')
+                return [SlotSet("first_name", None)]
+
+        return[]
+
+class ValidateLastName(Action):
+    def name(self) -> Text:
+        return "action_validate_last_name"
+
+    def run(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+
+        message = tracker.latest_message['text']
+        letters = "abcdefghijklmnopqrstuvwxyz"
+        upper_letters = letters.upper()
+        if message[0] != message[0].upper():
+            dispatcher.utter_message(text='Please enter your last name starting with a capital letter')
+            return [SlotSet("last_name", None)]
+        for m in message:
+            if not ((m in letters) or (m in upper_letters)):
+                dispatcher.utter_message(text='Use only letters for your last name')
+                return [SlotSet("last_name", None)]
+        return[]
+
+class ValidateDate(Action):
+    def name(self) -> Text:
+        return "action_validate_birth_date"
+
+    def run(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+
+        m = tracker.latest_message['text']
+        res = True
+        try: 
+            parse(m, fuzzy=False)
+        except ValueError:
+            res = False
+                
+        if res==False:
+            dispatcher.utter_message(text='Please enter date in format YYYY-MM-DD')
+            return[SlotSet("birth_date", None)]
+
         return[]
 
 class Registration(Action):
@@ -91,39 +130,28 @@ class Registration(Action):
 
         #add email and passord
         user_email = tracker.get_slot("email")
-        # user_password = tracker.get_slot("password")
-        # user_first_name = tracker.get_slot("first_name")
-        # user_second_name = tracker.get_slot("second_name")
-        # user_country = tracker.get_slot("country")
+        user_password = tracker.get_slot("password")
+        user_first_name = tracker.get_slot("first_name")
+        user_last_name = tracker.get_slot("last_name")
+        user_birth_date = tracker.get_slot("birth_date")
         user_phone_number = tracker.get_slot("phone_number")
-        # user_info = (user_email, user_password, user_first_name, user_second_name, user_country, user_phone_number)
 
-        # its_OK = validate(user_email)
-        # if its_OK:
-        #     cursor.execute("INSERT INTO user VALUES (?, ?, ?, ?, ?, ?)", user_info)    
-        # else:
-        #     pass
-        #     # need to restart action
+        user_info = (user_email, user_password, user_first_name, user_last_name, user_birth_date, user_phone_number)
         
-        user_info = (user_email, user_phone_number)
-        cursor.execute("INSERT INTO user VALUES (?, ?)", user_info)
+        cursor.execute("INSERT INTO user VALUES (?, ?, ?, ?, ?, ?)", user_info)
         
         connection.commit()
         connection.close()
 
-        message = tracker.latest_message['text']
-        if True: #correct(message):
-            dispatcher.utter_message(template="utter_register_successful")
-            return [
-                UserUttered("name", parse_data={'intent':{'name': 'register_fill_name', 'confidence': 1.0}}),
-                SlotSet("requested_slot", "name")]
-        else:
-            # slot intent register
-
-            return []
-        # dispatcher.utter_message(text=message)
-
-        return []
+        dispatcher.utter_message(template="utter_register_successful")
+        return [
+            SlotSet("email", None),
+            SlotSet("password", None),
+            SlotSet("first_name", None),
+            SlotSet("last_name", None),
+            SlotSet("birth_date", None),
+            SlotSet("phone_number", None)
+        ]
 
 
 class ActionProductSearch(Action):
